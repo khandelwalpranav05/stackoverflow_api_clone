@@ -1,12 +1,16 @@
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
+User = get_user_model()
+
+from django.db.models import Manager
 
 # Create your models here.
 class Question(models.Model):
     title = models.CharField(max_length=100)
-    description = models.TextField(max_length=1000)
+    description = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, related_name='questions', on_delete=models.CASCADE)
 
     def __str__(self):
@@ -14,8 +18,9 @@ class Question(models.Model):
 
 
 class Answer(models.Model):
-    text = models.TextField(max_length=1000)
+    text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(User, related_name='answers', on_delete=models.CASCADE)
     question = models.ForeignKey(Question, related_name='answers', on_delete=models.CASCADE)
 
@@ -26,6 +31,7 @@ class Answer(models.Model):
 class BaseComment(models.Model):
     text = models.TextField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         abstract = True

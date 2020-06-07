@@ -1,5 +1,5 @@
 from django.urls import path, include
-from .views import QuestionViewSet, AnswerViewSet,QuestionCommentViewSet,AnswerCommentViewSet
+from posts.api.views import QuestionViewSet, AnswerViewSet,QuestionCommentViewSet,AnswerCommentViewSet
 from rest_framework import routers
 
 router = routers.DefaultRouter()
