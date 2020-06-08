@@ -1,8 +1,11 @@
 from rest_framework import serializers
 from posts.models import Question, Answer, QuestionComment, AnswerComment
+from accounts.api.serializers import UserBasicSerializer
 
 
 class AnswerCommentSerializer(serializers.ModelSerializer):
+    created_by = UserBasicSerializer(required=False)
+
     class Meta:
         model = AnswerComment
         fields = ('id', 'text', 'created_by', 'created_at', 'answer')
@@ -18,6 +21,8 @@ class AnswerCommentSerializer(serializers.ModelSerializer):
 
 
 class QuestionCommentSerializer(serializers.ModelSerializer):
+    created_by = UserBasicSerializer(required=False)
+
     class Meta:
         model = QuestionComment
         fields = ('id', 'text', 'created_by', 'created_at', 'question')
@@ -34,6 +39,7 @@ class QuestionCommentSerializer(serializers.ModelSerializer):
 
 class AnswerSerializer(serializers.ModelSerializer):
     comments = AnswerCommentSerializer(many=True, required=False)
+    created_by = UserBasicSerializer(required=False)
 
     class Meta:
         model = Answer
@@ -49,9 +55,10 @@ class AnswerSerializer(serializers.ModelSerializer):
         return AnswerComment.objects.create(**validated_data, created_by=user)
 
 
-class QuestionSerializer(serializers.ModelSerializer):
+class QuestionDetailSerializer(serializers.ModelSerializer):
     comments = QuestionCommentSerializer(many=True, required=False)
     answers = AnswerSerializer(many=True, required=False)
+    created_by = UserBasicSerializer(required=False)
 
     class Meta:
         model = Question
@@ -64,4 +71,12 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        return AnswerComment.objects.create(**validated_data, created_by=user)
+        return Question.objects.create(**validated_data, created_by=user)
+
+
+class QuestionListSerializer(serializers.ModelSerializer):
+    created_by = UserBasicSerializer(required=False)
+
+    class Meta:
+        model = Question
+        fields = ('id', 'title', 'description', 'created_at', 'created_by')

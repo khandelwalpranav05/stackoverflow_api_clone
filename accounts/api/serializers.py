@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -13,3 +12,9 @@ class UserSerializer(serializers.ModelSerializer):
             'is_active': {'read_only': True},
             'is_staff': {'read_only': True},
         }
+
+class UserBasicSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ('id','username')
+        read_only_fields = ('id','username')

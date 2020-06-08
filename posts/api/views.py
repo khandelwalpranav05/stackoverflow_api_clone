@@ -1,4 +1,5 @@
-from posts.api.serializers import QuestionSerializer, AnswerSerializer, QuestionCommentSerializer, AnswerCommentSerializer
+from posts.api.serializers import QuestionDetailSerializer, AnswerSerializer, QuestionCommentSerializer, \
+    AnswerCommentSerializer,QuestionListSerializer
 from posts.models import Question, Answer, QuestionComment, AnswerComment
 
 from rest_framework import viewsets
@@ -6,12 +7,14 @@ from rest_framework import viewsets
 
 # Create your views here.
 
-class QuestionViewSet(viewsets.ModelViewSet):
-    serializer_class = QuestionSerializer
+class QuestionListViewSet(viewsets.ModelViewSet):
+    serializer_class = QuestionListSerializer
     queryset = Question.objects.all()
 
-    def perform_create(self, serializer):
-        return serializer.save(created_by=self.request.user)
+
+class QuestionViewSet(viewsets.ModelViewSet):
+    serializer_class = QuestionDetailSerializer
+    queryset = Question.objects.all()
 
 
 class AnswerViewSet(viewsets.ModelViewSet):
