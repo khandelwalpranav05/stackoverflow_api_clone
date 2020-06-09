@@ -5,6 +5,7 @@ User = get_user_model()
 
 from django.db.models import Manager
 
+
 # Create your models here.
 class Question(models.Model):
     title = models.CharField(max_length=100)

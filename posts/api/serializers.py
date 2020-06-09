@@ -34,11 +34,11 @@ class QuestionCommentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        return AnswerComment.objects.create(**validated_data, created_by=user)
+        return QuestionComment.objects.create(**validated_data, created_by=user)
 
 
 class AnswerSerializer(serializers.ModelSerializer):
-    comments = AnswerCommentSerializer(many=True, required=False)
+    comments = serializers.SerializerMethodField()
     created_by = UserBasicSerializer(required=False)
 
     class Meta:
@@ -47,22 +47,25 @@ class AnswerSerializer(serializers.ModelSerializer):
         extra_kwargs = {
             'id': {'read_only': True},
             'created_by': {'read_only': True},
-            'created_at': {'read_only': True}
+            'created_at': {'read_only': True},
+            'comments': {'read_only': True},
         }
 
     def create(self, validated_data):
         user = self.context['request'].user
-        return AnswerComment.objects.create(**validated_data, created_by=user)
+        return Answer.objects.create(**validated_data, created_by=user)
+
+    def get_comments(self, instance):
+        return AnswerCommentSerializer(instance.comments.all()[:1], many=True).data
 
 
 class QuestionDetailSerializer(serializers.ModelSerializer):
-    comments = QuestionCommentSerializer(many=True, required=False)
-    answers = AnswerSerializer(many=True, required=False)
+    comments = serializers.SerializerMethodField()
     created_by = UserBasicSerializer(required=False)
 
     class Meta:
         model = Question
-        fields = ('id', 'title', 'description', 'created_by', 'created_at', 'comments', 'answers')
+        fields = ('id', 'title', 'description', 'created_by', 'created_at', 'comments')
         extra_kwargs = {
             'id': {'read_only': True},
             'created_by': {'read_only': True},
@@ -72,6 +75,9 @@ class QuestionDetailSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         return Question.objects.create(**validated_data, created_by=user)
+
+    def get_comments(self, instance):
+        return QuestionCommentSerializer(instance.comments.all()[:2], many=True).data
 
 
 class QuestionListSerializer(serializers.ModelSerializer):
