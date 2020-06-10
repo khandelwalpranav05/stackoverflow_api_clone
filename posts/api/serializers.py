@@ -3,12 +3,21 @@ from posts.models import Question, Answer, QuestionComment, AnswerComment
 from accounts.api.serializers import UserBasicSerializer
 
 
-class AnswerCommentSerializer(serializers.ModelSerializer):
+class QuestionListSerializer(serializers.ModelSerializer):
     created_by = UserBasicSerializer(required=False)
 
     class Meta:
-        model = AnswerComment
-        fields = ('id', 'text', 'created_by', 'created_at', 'answer')
+        model = Question
+        fields = ('id', 'title', 'description', 'created_at', 'created_by')
+
+
+class QuestionDetailSerializer(serializers.ModelSerializer):
+    comments = serializers.SerializerMethodField()
+    created_by = UserBasicSerializer(required=False)
+
+    class Meta:
+        model = Question
+        fields = ('id', 'title', 'description', 'created_by', 'created_at', 'comments')
         extra_kwargs = {
             'id': {'read_only': True},
             'created_by': {'read_only': True},
@@ -17,7 +26,10 @@ class AnswerCommentSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        return AnswerComment.objects.create(**validated_data, created_by=user)
+        return Question.objects.create(**validated_data, created_by=user)
+
+    def get_comments(self, instance):
+        return QuestionCommentSerializer(instance.comments.all()[:2], many=True).data
 
 
 class QuestionCommentSerializer(serializers.ModelSerializer):
@@ -59,13 +71,12 @@ class AnswerSerializer(serializers.ModelSerializer):
         return AnswerCommentSerializer(instance.comments.all()[:1], many=True).data
 
 
-class QuestionDetailSerializer(serializers.ModelSerializer):
-    comments = serializers.SerializerMethodField()
+class AnswerCommentSerializer(serializers.ModelSerializer):
     created_by = UserBasicSerializer(required=False)
 
     class Meta:
-        model = Question
-        fields = ('id', 'title', 'description', 'created_by', 'created_at', 'comments')
+        model = AnswerComment
+        fields = ('id', 'text', 'created_by', 'created_at', 'answer')
         extra_kwargs = {
             'id': {'read_only': True},
             'created_by': {'read_only': True},
@@ -74,15 +85,4 @@ class QuestionDetailSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         user = self.context['request'].user
-        return Question.objects.create(**validated_data, created_by=user)
-
-    def get_comments(self, instance):
-        return QuestionCommentSerializer(instance.comments.all()[:2], many=True).data
-
-
-class QuestionListSerializer(serializers.ModelSerializer):
-    created_by = UserBasicSerializer(required=False)
-
-    class Meta:
-        model = Question
-        fields = ('id', 'title', 'description', 'created_at', 'created_by')
+        return AnswerComment.objects.create(**validated_data, created_by=user)

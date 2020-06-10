@@ -8,7 +8,7 @@ from rest_framework.pagination import LimitOffsetPagination, PageNumberPaginatio
 
 # Create your views here.
 
-class QuestionListPagination(PageNumberPagination):
+class ListPagination(PageNumberPagination):
     page_size = 2
     page_size_query_param = 'page_size'
     max_page_size = 10
@@ -19,8 +19,17 @@ class QuestionViewSet(viewsets.ModelViewSet):
     serializer_action_classes = {
         'list': QuestionListSerializer
     }
-    queryset = Question.objects.all()
-    pagination_class = QuestionListPagination
+    queryset = Question.objects.prefetch_related('created_by', 'comments').all()
+    queryset_action = {
+        'list': Question.objects.select_related('created_by').all()
+    }
+    pagination_class = ListPagination
+
+    def get_queryset(self):
+        try:
+            return self.queryset_action[self.action]
+        except(KeyError, AttributeError):
+            return super().get_queryset()
 
     def get_serializer_class(self):
         try:
@@ -29,34 +38,38 @@ class QuestionViewSet(viewsets.ModelViewSet):
             return super().get_serializer_class()
 
 
-class AnswerListView(generics.ListCreateAPIView):
-    serializer_class = AnswerSerializer
-
-    def get_queryset(self):
-        return Answer.objects.filter(question_id=self.kwargs['id'])
-
-
 class QuestionCommentListView(generics.ListCreateAPIView):
     serializer_class = QuestionCommentSerializer
+    pagination_class = ListPagination
 
     def get_queryset(self):
-        return QuestionComment.objects.filter(question_id=self.kwargs['id'])
+        queryset = QuestionComment.objects.select_related('created_by').filter(question_id=self.kwargs['id'])
+        return queryset
 
 
 class QuestionCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = QuestionCommentSerializer
-    queryset = QuestionComment.objects.all()
+    queryset = QuestionComment.objects.select_related('created_by').all()
     lookup_field = 'id'
+
+
+class AnswerListView(generics.ListCreateAPIView):
+    serializer_class = AnswerSerializer
+    pagination_class = ListPagination
+
+    def get_queryset(self):
+        return Answer.objects.prefetch_related('created_by', 'comments').filter(question_id=self.kwargs['id'])
 
 
 class AnswerCommentListView(generics.ListCreateAPIView):
     serializer_class = AnswerCommentSerializer
+    pagination_class = ListPagination
 
     def get_queryset(self):
-        return AnswerComment.objects.filter(answer_id=self.kwargs['id'])
+        return AnswerComment.objects.select_related('created_by').filter(answer_id=self.kwargs['id'])
 
 
 class AnswerCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AnswerCommentSerializer
-    queryset = AnswerComment.objects.all()
+    queryset = AnswerComment.objects.select_related('created_by').all()
     lookup_field = 'id'
