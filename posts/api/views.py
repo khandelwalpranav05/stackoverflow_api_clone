@@ -4,14 +4,17 @@ from posts.models import Question, Answer, QuestionComment, AnswerComment
 
 from rest_framework import viewsets, generics
 from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
-
-
+from rest_framework import filters
+from rest_framework import permissions
 # Create your views here.
 
+from .permissions import IsOwnerOrReadOnly
+
+
 class ListPagination(PageNumberPagination):
-    page_size = 2
+    page_size = 20
     page_size_query_param = 'page_size'
-    max_page_size = 10
+    max_page_size = 20
 
 
 class QuestionViewSet(viewsets.ModelViewSet):
@@ -23,7 +26,10 @@ class QuestionViewSet(viewsets.ModelViewSet):
     queryset_action = {
         'list': Question.objects.select_related('created_by').all()
     }
+    permission_classes = (IsOwnerOrReadOnly,)
     pagination_class = ListPagination
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'description']
 
     def get_queryset(self):
         try:
@@ -51,6 +57,7 @@ class QuestionCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = QuestionCommentSerializer
     queryset = QuestionComment.objects.select_related('created_by').all()
     lookup_field = 'id'
+    permission_classes = (IsOwnerOrReadOnly,)
 
 
 class AnswerListView(generics.ListCreateAPIView):
@@ -73,3 +80,4 @@ class AnswerCommentDetailView(generics.RetrieveUpdateDestroyAPIView):
     serializer_class = AnswerCommentSerializer
     queryset = AnswerComment.objects.select_related('created_by').all()
     lookup_field = 'id'
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsOwnerOrReadOnly,)
